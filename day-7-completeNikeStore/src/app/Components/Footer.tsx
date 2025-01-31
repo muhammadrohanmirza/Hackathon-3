@@ -1,8 +1,10 @@
+'use client'
 import React from 'react';
 import { FaFacebook } from "react-icons/fa";
 import { AiFillTwitterCircle } from "react-icons/ai";
 import { FaYoutubeSquare } from "react-icons/fa";
 import { AiFillInstagram } from "react-icons/ai";
+import Link from 'next/link';
 
 export default function Footer(){
     return(
@@ -12,10 +14,10 @@ export default function Footer(){
             <div className="flex flex-col md:flex-row gap-8 md:gap-20">
               <div className="flex flex-col space-y-4">
                 <h1>Find A Store</h1>
-                <a href="#" className="text-gray-400 hover:text-white hover:underline">FIND A STORE</a>
-                <a href="#" className="text-gray-400 hover:text-white hover:underline">BECOME A MEMBER</a>
-                <a href="#" className="text-gray-400 hover:text-white hover:underline">SIGN UP FOR EMAIL</a>
-                <a href="#" className="text-gray-400 hover:text-white hover:underline">Send Us Feedback</a>
+                <Link href={'/Find'} className="text-gray-400 hover:text-white hover:underline">FIND A STORE</Link>
+                <Link href={'/Join'} className="text-gray-400 hover:text-white hover:underline">BECOME A MEMBER</Link>
+                <Link href={'/SignIn'} className="text-gray-400 hover:text-white hover:underline">SIGN UP FOR EMAIL</Link>
+                <Link href={'/Find'}  className="text-gray-400 hover:text-white hover:underline">Send Us Feedback</Link>
                 <a href="#" className="text-gray-400 hover:text-white hover:underline">STUDENT DISCOUNTS</a>
               </div>
               <div className="flex flex-col space-y-4">

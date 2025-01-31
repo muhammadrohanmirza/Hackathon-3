@@ -9,69 +9,9 @@ import { Product } from "../../../types/products";
 import { getCartItems, removeFromCart, updateCartQuantity } from "../actions/actions";
 import { urlFor } from "@/sanity/lib/image";
 import Swal from "sweetalert2";
+import { useRouter } from "next/navigation";
 
 export default function Cart() {
-  // const [cartItems, setCartItems] = useState<Product[]>([]);
-
-  // useEffect(() => {
-  //   setCartItems(getCartItems());
-  // }, []);
-
-  // const handleRemove = (id: string) => {
-  //   Swal.fire({
-  //     title: "Are you sure?",
-  //     text: "You won't be able to undo this action!",
-  //     icon: "warning",
-  //     showCancelButton: true,
-  //     confirmButtonColor: "#d33",
-  //     cancelButtonColor: "#3085d6",
-  //     confirmButtonText: "Yes, remove it!",
-  //   }).then((result) => {
-  //     if (result.isConfirmed) {
-  //       removeFromCart(id);
-  //       setCartItems(getCartItems());
-  //       Swal.fire(
-  //         "Removed!",
-  //         "Item has been removed from your cart.",
-  //         "success"
-  //       );
-  //     }
-  //   });
-  // };
-
-  // const handleQuantityChange = (id: string, quantity: number) => {
-  //   updateCartQuantity(id, quantity);
-  //   setCartItems(getCartItems());
-  // };
-
-  // const handleIncrement = (id: string) => {
-  //   const product = cartItems.find((item) => item._id === id);
-  //   if (product) {
-  //     handleQuantityChange(id, product.inventory + 1);
-  //   }
-  // };
-
-  // const handleDecrement = (id: string) => {
-  //   const product = cartItems.find((item) => item._id === id);
-  //   if (product && product.inventory > 1) {
-  //     handleQuantityChange(id, product.inventory - 1);
-  //   }
-  // };
-
-  // const calculateTotal = () => {
-  //   return cartItems.reduce(
-  //     (total, item) => total + item.price * item.inventory,
-  //     0
-  //   );
-  // };
-
-
-  // const handleCheckout = () => {
-    // Pass cartItems to the checkout page
-    // Example of passing as query parameter
-  //   const cartItemsQuery = cartItems.map(item => `productId=${item._id}&quantity=${item.inventory}`).join('&');
-  //   window.location.href = `/Checkout?${cartItemsQuery}`;
-  // };
 
   const [cartItems, setCartItems] = useState<Product[]>([]);
 
@@ -126,10 +66,28 @@ export default function Cart() {
       0
     );
   };
-
-  const handleCheckout = () => {
-    const cartItemsQuery = cartItems.map(item => `productId=${item._id}&quantity=${item.inventory}`).join('&');
-    window.location.href = `/Checkout?${cartItemsQuery}`;
+const router = useRouter();
+  const handleProceed = () => {
+   Swal.fire({
+    title: "Processing your order....",
+    text: "Please wait a moment.",
+    icon: "info",
+    showCancelButton: true,
+    confirmButtonColor: "#d33",
+    cancelButtonColor: "#3085d6",
+    confirmButtonText: "Proceed",
+   }).then((result) => {
+    if (result.isConfirmed) {
+      Swal.fire(
+        'success!',
+        'Your order has been successfully processed!',
+        'success'
+      );
+      router.push('/Checkout');
+      // clear the cart after processing the order (optional)
+      setCartItems([]);
+    }
+  });
   };
 
   return (
@@ -244,7 +202,7 @@ export default function Cart() {
       </div>
       <div className="bg-black w-[160px] h-[40px] rounded-full flex justify-center items-center p-4 mt-6 ml-[28%] sm:ml-[38%] lg:ml-[28%] xl:ml-[32%]">
           <Link href={`/Checkout`}>
-          <button onClick={handleCheckout} className="text-white text-[14px] font-medium">
+          <button onClick={handleProceed} className="text-white text-[14px] font-medium">
             Member Checkout
           </button>
           </Link>

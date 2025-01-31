@@ -8,7 +8,7 @@ import { urlFor } from "@/sanity/lib/image";
 import { FaRegHeart } from "react-icons/fa";
 import {addToWishlist, getWishlistItems, removeFromWishlist } from "../actions/actions";
 import toast from "react-hot-toast";
-import { allProduct } from "@/sanity/lib/query";
+import { kids } from "@/sanity/lib/query";
 
 
 export default function Products() {
@@ -31,7 +31,7 @@ export default function Products() {
 
   useEffect(() => {
     async function fetchProducts() {
-      const products: Product[] = await client.fetch(allProduct);
+      const products: Product[] = await client.fetch(kids);
       setAllProducts(products);
       setDisplayedProducts(products.slice(0, 24));
       setShowMoreVisible(products.length > 24);

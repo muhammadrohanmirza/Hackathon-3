@@ -1,3 +1,4 @@
+'use client'
 export default function ContactInfo(){
     return(
         <div className="p-4">

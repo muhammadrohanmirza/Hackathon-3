@@ -1,50 +1,149 @@
 'use client';
-
 import Image from "next/image";
 import { FaBox } from "react-icons/fa";
-import order from "../../../Assets/order.png"
 import Link from 'next/link';
 import { urlFor } from '@/sanity/lib/image';
 import { Product } from '../../../types/products';
 import { useEffect, useState } from "react";
 import { getCartItems } from "../actions/actions";
+import order from "@/sanity/schemaTypes/order";
+import { client } from "@/sanity/lib/client";
+import Swal from "sweetalert2";
 
 
 export default function Checkout() {
 
 const [cartItems, setCartItems] = useState<Product[]>([]);
-const [isConfirmed, setIsConfirmed] = useState(false);
-  useEffect(() => {
-    setCartItems(getCartItems());
-  }, []);
+const [discount, setDiscount] = useState<number>(0);
+const [formValue, setFormValue] = useState({
+  firstname: '',
+  lastname: '',
+  address: '',
+  city: '',
+  zipcode: '',
+  phonenumber: '',
+  email: '',
+  // cardnumber: '',
+  // expirydate: '',
+  // cvv: ''
 
-    const subtotal = cartItems.reduce((acc, item) => {
-        return acc + parseFloat(item.price.toString()) * item.inventory;
-    }, 0);
+});
+const [formError, setFormError] = useState({
+  firstname: false,
+  lastname: false,
+  address: false,
+  city: false,
+  zipcode: false,
+  phonenumber: false,
+  email: false,
+  // cardnumber: false,
+  // expirydate: false,
+  // cvv: false
+  
+});
 
-    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-        e.preventDefault();
-        setIsConfirmed(true);
-        localStorage.removeItem('cart');
+useEffect(() => {
+  setCartItems(getCartItems());
+  const applyDiscount = localStorage.getItem('applyDiscount');
+  if (applyDiscount) {
+    setDiscount(Number(applyDiscount));
+  }
+}, []);
+
+
+    const subtotal = cartItems.reduce((total, item) => 
+         total + item.price * item.inventory, 0);
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      setFormValue({
+        ...formValue,
+        [e.target.id]: e.target.value
+      });
+    }
+
+    const validateForm = () => {
+      const error = {
+        firstname: !formValue.firstname,
+        lastname: !formValue.lastname,
+        address: !formValue.address,
+        city: !formValue.city,
+        zipcode: !formValue.zipcode,
+        phonenumber: !formValue.phonenumber,
+        email: !formValue.email,
+        // cardnumber: !formValue.cardnumber,
+        // expirydate: !formValue.expirydate,
+        // cvv: !formValue.cvv
       };
-    
-      if (isConfirmed) {
-        return (
-          <div className="flex items-center justify-center min-h-[50vh] mt-6">
-            <div className="text-center">
-              <div className='flex flex-col justify-center items-center mb-4'>
-                <Image src={order} alt='check' className='w-[40px] h-[40px]'/>
-              </div>
-              <h1 className="text-2xl font-bold mb-4">Your order is confirmed!</h1>
-              <p className="text-gray-600">Thank you for shopping with us.</p>
-            </div>
-          </div>
-        );
+      
+      setFormError(error);
+      return Object.values(error).every((error) => !error);
       }
+
+
+    const handlePlaceOrder = async () => {
+        // if (validateForm()) {
+        //   // Place order logic here
+        //   // setIsConfirmed(true);
+        //   // Clear cart after placing order
+        //   localStorage.removeItem('appliedDiscount');
+        // }
+
+        Swal.fire({
+          title: 'Processing your order....',
+          text: 'Please wait a moment.',
+          icon: 'info',
+          showCancelButton: true,
+          confirmButtonColor: '#3085d6',
+          cancelButtonColor: '#d33',
+          confirmButtonText: 'Process',
+        }).then((result) => {
+          if (result.isConfirmed) {
+            if (validateForm()) {
+              localStorage.removeItem('appliedDiscount');
+              Swal.fire(
+                'Success!',
+                'Your order has been successfully processed!',
+                'success'
+              );
+              
+            } else {
+            Swal.fire(
+              'Error!',
+              'Please fill in all the fields before proceeding.',
+              'error'
+            );
+          }
+        }
+        });
+
+        const orderData = {
+          _type: 'order',
+          firstName: formValue.firstname,
+          lastName: formValue.lastname,
+          address: formValue.address,
+          city: formValue.city,
+          zipcode: formValue.zipcode,
+          phone: formValue.phonenumber,
+          email: formValue.email,
+          cartitems: cartItems.map(items => ({
+            _type: 'reference',
+            _ref : items._id,
+          })),
+          total : subtotal,
+          discount : discount,
+          orderDate : new Date().toISOString()
+        };
+      try {
+      await client.create(orderData)
+      localStorage.removeItem('applyDiscount');
+      } catch (error) {
+      console.error('error creating order', error)
+      }
+    };
+    
 
   return (
     <div className="p-4 bg-slate-50 min-h-screen py-10">
-      <form onSubmit={handleSubmit}>
+      {/* <form onSubmit={}> */}
         <div className="flex flex-col lg:flex-row lg:justify-between lg:gap-8 mx-auto max-w-7xl">
           <div className="lg:w-2/3 xl:w-3/5 bg-white p-6 rounded-lg shadow-md">
             <div>
@@ -61,112 +160,161 @@ const [isConfirmed, setIsConfirmed] = useState(false);
             </div>
 
             <h1 className="text-[16px] font-medium mt-2">
-              Enter your name and address:
+              Enter your information:
             </h1>
 
             <div className="mt-4 flex flex-col gap-4">
-              <input
+             <div>
+             <label htmlFor="firstName">First Name</label>
+             <input
                 type="text"
+                id="firstname"
                 className="w-full h-[50px] border border-gray-400 rounded-md p-2 text-[14px]"
-                placeholder="First Name"
-                required
+                placeholder="Enter your First Name"
+                value={formValue.firstname}
+                onChange={handleInputChange}
               />
-              <input
+              {formError.firstname && (
+                  <p className="text-sm text-red-500">
+                    First name is required.
+                  </p>
+                )}
+             </div>
+             <div>
+             <label htmlFor="lastName">Last Name </label>
+             <input
                 type="text"
+                id="lastname"
                 className="w-full h-[50px] border border-gray-400 rounded-md p-2 text-[14px]"
-                placeholder="Last Name"
-                required
+                placeholder="Enter your Last Name"
+                value={formValue.lastname}
+                onChange={handleInputChange}
               />
+              {formError.lastname && (
+                  <p className="text-sm text-red-500">
+                    Last name is required.
+                  </p>
+                )}
+             </div>
               <div className="relative">
+                <label htmlFor="address1">Address</label>
                 <input
-                  type="text"
+                  id="address"
                   className="w-full h-[50px] border border-gray-400 rounded-md p-2 text-[14px] mb-2"
-                  placeholder="Address Line 1"
-                  required
+                  placeholder="Enter your Address"
+                  value={formValue.address}
+                  onChange={handleInputChange}
                 />
-                <div className="absolute left-1 bottom-[-8px] text-[#757575] text-[10px]">
-                  We do not ship to P.O. boxes
-                </div>
+                {formError.address && (
+                  <p className="text-sm text-red-500">Address is required</p>
+                )}
               </div>
-              <input
-                type="text"
-                className="w-full h-[50px] border border-gray-400 rounded-md p-2 text-[14px]"
-                placeholder="Address Line 2"
-              />
-              <div className="flex gap-4">
+              <div className="relative">
+                <label htmlFor="address1">City</label>
                 <input
-                  type="text"
-                  className="w-full lg:w-1/2 h-[50px] border border-gray-400 rounded-md p-2 text-[14px]"
-                  placeholder="Postal Code"
-                  required
+                  id="city"
+                  className="w-full h-[50px] border border-gray-400 rounded-md p-2 text-[14px] mb-2"
+                  placeholder="Enter your city"
+                  value={formValue.city}
+                  onChange={handleInputChange}
                 />
-                <input
-                  type="text"
-                  className="w-full lg:w-1/2 h-[50px] border border-gray-400 rounded-md p-2 text-[14px]"
-                  placeholder="Locality"
-                />
+                {formError.city && (
+                  <p className="text-sm text-red-500">City is required</p>
+                )}
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <select
-                  className="w-full h-[50px] p-2 border rounded-md text-[14px]"
-                >
-                  <option>State/Territory</option>
-                  <option>Sindh</option>
-                  <option>Punjab</option>
-                  <option>Baluchistan</option>
-                  <option>KPK</option>
-                </select>
+              <div className="relative">
+                <label htmlFor="address1">Zip Code</label>
                 <input
-                  type="text"
-                  placeholder="Pakistan"
-                  className="w-full h-[50px] p-2 border rounded-md"
-                  disabled
+                  id="zipcode"
+                  className="w-full h-[50px] border border-gray-400 rounded-md p-2 text-[14px] mb-2"
+                  placeholder="Enter your zipcode"
+                  value={formValue.zipcode}
+                  onChange={handleInputChange}
                 />
+                {formError.zipcode && (
+                  <p className="text-sm text-red-500">Zip code is required</p>
+                )}
+              </div>
+              <div className="relative">
+                <label htmlFor="address1">Phone Number</label>
+                <input
+                type="tel"
+                  id="phonenumber"
+                  className="w-full h-[50px] border border-gray-400 rounded-md p-2 text-[14px] mb-2"
+                  placeholder="Enter your Phone Number"
+                  value={formValue.phonenumber}
+                  onChange={handleInputChange}
+                />
+                {formError.phonenumber && (
+                  <p className="text-sm text-red-500">Phone Number is required</p>
+                )}
+              </div>
+              <div className="relative">
+                <label htmlFor="address1">Email</label>
+                <input
+                type="email"
+                  id="email"
+                  className="w-full h-[50px] border border-gray-400 rounded-md p-2 text-[14px] mb-2"
+                  placeholder="Enter your email"
+                  value={formValue.email}
+                  onChange={handleInputChange}
+                />
+                {formError.email && (
+                  <p className="text-sm text-red-500">Email is required</p>
+                )}
               </div>
             </div>
 
-            <div className="space-y-2 mt-4">
-              <label className="flex items-center text-[14px] text-[#757575]">
-                <input type="checkbox" className="mr-2" required />
-                Save this address to my profile
-              </label>
-              <label className="flex items-center text-[14px] text-[#757575]">
-                <input type="checkbox" className="mr-2" required />
-                Make this my preferred address
-              </label>
-            </div>
-
-
-
-            <div className="relative">
+            {/* <div className="relative">
             <h1 className="text-[16px] font-medium mt-2 mb-2">
              Payment Information:
             </h1>
               <div>
               <input
                   type="text"
+                  id="cardnumber"
                   className="w-full h-[50px] border border-gray-400 rounded-md p-2 text-[14px] mb-2"
-                  placeholder="Card Number"
-                  required
+                  placeholder="Enter your Card Number"
+                  value={formValue.cardnumber}
+                  onChange={handleInputChange}
                 />
+                {formError.cardnumber && (
+                  <p className="text-sm text-red-500">
+                    Card Number is required.
+                  </p>
+                )}
+              </div>
+              <div>
+              <input
+                  type="date"
+                  id="expirydate"
+                  className="w-full h-[50px] border border-gray-400 rounded-md p-2 text-[14px] mb-2"
+                  placeholder="Enter your card Expiry Date"
+                  value={formValue.expirydate}
+                  onChange={handleInputChange}
+                />
+                {formError.expirydate && (
+                  <p className="text-sm text-red-500">
+                    Expiry Date is required.
+                  </p>
+                )}
               </div>
               <div>
               <input
                   type="text"
+                  id="cvv"
                   className="w-full h-[50px] border border-gray-400 rounded-md p-2 text-[14px] mb-2"
-                  placeholder="Expiry Date"
-                  required
+                  placeholder="Enter your CVV"
+                  value={formValue.cvv}
+                  onChange={handleInputChange}
                 />
+                {formError.cvv && (
+                  <p className="text-sm text-red-500">
+                    CVV is required.
+                  </p>
+                )}
               </div>
-              <div>
-              <input
-                  type="text"
-                  className="w-full h-[50px] border border-gray-400 rounded-md p-2 text-[14px] mb-2"
-                  placeholder="CVV"
-                  required
-                />
-              </div>
-              </div>
+              </div> */}
 
 
           </div>
@@ -179,7 +327,11 @@ const [isConfirmed, setIsConfirmed] = useState(false);
               <div>
                 <div className="flex justify-between items-center">
                   <p className="text-[#8D8D8D] font-normal text-[14px]">Subtotal</p>
-                  <p className="text-[#8D8D8D] font-normal text-[14px]">₹ {subtotal.toFixed(2)}</p>
+                  <p className="text-[#8D8D8D] font-normal text-[14px]">₹ {subtotal}</p>
+                </div>
+                <div className="flex justify-between items-center">
+                  <p className="text-[#8D8D8D] font-normal text-[14px]">Discount</p>
+                  <p className="text-[#8D8D8D] font-normal text-[14px]">₹ {discount}</p>
                 </div>
                 <div className="flex justify-between items-center mt-2">
                   <p className="text-[#8D8D8D] font-normal text-[14px]">Delivery/Shipping</p>
@@ -199,14 +351,15 @@ const [isConfirmed, setIsConfirmed] = useState(false);
               <h1 className="text-[14px] font-bold text-center">
                 Arrives in 5-7 business days
               </h1>
-              {cartItems.map((item, index) => (
-                <div key={index} className="flex gap-4 mt-4">
+              {cartItems.length > 0 ? (
+              cartItems.map((item) => (
+                <div key={item._id} className="flex gap-4 mt-4">
                   <Image
-                  src={urlFor(item.image).url()}
-                  alt={item.productName}
-                  width={70}
-                  height={70}
-                  className=" w-[70px] h-[70px] object-contain"
+                    src={urlFor(item.image).url()}
+                    alt={item.productName}
+                    width={70}
+                    height={70}
+                    className=" w-[70px] h-[70px] object-contain"
                   />
                   <div>
                     <p className="text-[12px] font-medium">{item.productName}</p>
@@ -214,22 +367,26 @@ const [isConfirmed, setIsConfirmed] = useState(false);
                     <p className="text-[12px] font-bold mt-1">₹{item.price}</p>
                   </div>
                 </div>
-              ))}
+              ))
+              ) : (
+                <p className="text-center">No items in cart</p>
+              )}
             </div>
-          </div>
-        </div>
-        <div className="text-center mt-6">
+            <div className="text-center mt-6">
           <button 
             type="submit" 
-            className="bg-black text-white px-10 py-3 rounded-full hover:bg-gray-800 transition duration-300"
+            className="bg-black sm:w-96 text-white px-10 py-3 rounded-full hover:bg-gray-800 transition duration-300"
+            onClick={handlePlaceOrder}
           >
-            Confirm Order
+            Place Order
           </button>
         </div>
-      </form>
+          </div>
+        </div>
+       
+      {/* </form> */}
     </div>
-  );
-     
+  ); 
 }
 
 

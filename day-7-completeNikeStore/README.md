@@ -76,4 +76,3 @@ npm run dev
 [Submit Link](https://docs.google.com/forms/d/e/1FAIpQLSd77V_p3TTDXxBvOE7tswNVG1OOBx3BNsbmBcgNprtDLzvcwg/viewform?usp=send_form)
 
 This project represents my dedication, problem-solving skills, and understanding of modern web development tools and techniques. I hope you find this submission satisfactory!
-"# Nike-Store-Ecommerce--hackathon-3" 

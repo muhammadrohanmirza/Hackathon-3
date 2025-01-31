@@ -22,6 +22,10 @@ export interface Product {
         _type: "slug";
         current: string;
     };
+    quantity: number; // Add this line
+    // tags: string[];
+    // rating: number;
+    // reviews: number;
 }
 
 

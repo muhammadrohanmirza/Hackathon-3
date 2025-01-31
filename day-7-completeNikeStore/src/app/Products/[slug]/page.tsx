@@ -5,20 +5,12 @@ import { Product } from "../../../../types/products";
 import Image from "next/image";
 import { urlFor } from "@/sanity/lib/image";
 import { IoMdStar } from "react-icons/io";
-import { FaRegStarHalfStroke } from "react-icons/fa6";
-import { TiSocialFacebook } from "react-icons/ti";
-import { FaTwitter } from "react-icons/fa";
-import { LiaSmsSolid } from "react-icons/lia";
-import { MdOutlineHorizontalRule } from "react-icons/md";
-import Link from "next/link";
-import { FaGripLinesVertical } from "react-icons/fa";
+import { FaRegStarHalfStroke } from "react-icons/fa6"
 import { addToCart } from "@/app/actions/actions";
-// import buy from "../../../../Assets/buy.png";
 import swal from "sweetalert2";
-
+import Reviews from "../../../app/Components/productReview";
 interface ProductPageProps {
  params : Promise<{slug: string}>;
-
 }
 
 async function getProduct(slug: string) : Promise<Product> {
@@ -46,10 +38,7 @@ const handleAddToCart = (e: React.MouseEvent, product: Product) => {
     timer: 1000
   });
   addToCart(product)
-
-  
 }
-
 
 export default async function ProductPage({ params }: ProductPageProps) {
   const {slug} = await params;
@@ -84,17 +73,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
           <FaRegStarHalfStroke className="text-blue-700" size={30} />
             <span className="text-gray-600 ml-3">4 Reviews</span>
           </span>
-          <span className="flex ml-3 pl-3 py-2 border-l-2 border-gray-200 space-x-1">
-            <Link href={'#'} className="text-gray-500">
-            <TiSocialFacebook size={30} />
-            </Link>
-            <Link href={'#'} className="text-gray-500">
-            <FaTwitter size={30} />
-            </Link>
-            <Link href={'#'} className="text-gray-500">
-            <LiaSmsSolid size={30} />
-            </Link>
-          </span>
+         
         </div>
         <p className="leading-relaxed">
         {product.description}
@@ -104,21 +83,6 @@ export default async function ProductPage({ params }: ProductPageProps) {
             <span className="mr-3 font-extrabold">Color:</span>
             {product.colors}
           </div>
-          <FaGripLinesVertical />
-          <div className="flex ml-3 items-center">
-            <span className="mr-3 font-extrabold">Size</span>
-            <div className="relative">
-              <select className="rounded border appearance-none border-gray-300 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500 text-base pl-3 pr-10">
-                <option>SM</option>
-                <option>M</option>
-                <option>L</option>
-                <option>XL</option>
-              </select>
-              <span className="absolute right-0 top-0 h-full w-10 text-center text-gray-600 pointer-events-none flex items-center justify-center">
-              <MdOutlineHorizontalRule  className="text-gray-400" />
-              </span>
-            </div>
-          </div>
         </div>
         <div className="flex gap-10">
           <span className="title-font font-medium text-2xl text-gray-900">
@@ -127,21 +91,10 @@ export default async function ProductPage({ params }: ProductPageProps) {
           <button onClick={(e) => handleAddToCart(e, product)} className="bg-gradient-to-r from-blue-500 to-purple-500 text-white font-extrabold py-2 px-4 rounded-lg shadow-md hover:shadow-lg  hover:scale-110 transition-transform duration-300 ease-out">
             Add To Cart
           </button>
-          <button className="rounded-full w-10 h-10 bg-gray-200 p-0 border-0 inline-flex items-center justify-center text-gray-500 ml-4">
-            <svg
-              fill="currentColor"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              className="w-5 h-5"
-              viewBox="0 0 24 24"
-            >
-              <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" />
-            </svg>
-          </button>
         </div>
       </div>
     </div>
+      <Reviews/>
   </div>
 </section>
 
